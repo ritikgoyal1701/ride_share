@@ -157,3 +157,27 @@ func isTokenValid(token string) (isValid bool, err error) {
 	_, isValid, err = jwt.ValidateToken(token)
 	return
 }
+
+func (s *Service) UpdateDriverLocation(
+	ctx context.Context,
+	userDetails models.UserDetails,
+	req requests.LocationUpdate,
+) (cusErr error2.CustomError) {
+	cusErr = s.driverRepository.UpdateDriver(ctx, map[string]mongo.QueryFilter{
+		constants.MongoID: {
+			mongo.IDQuery,
+			userDetails.ID,
+		},
+	}, map[string]interface{}{
+		constants.Location: models.Location{
+			XCoordinate: req.XCoordinate,
+			YCoordinate: req.YCoordinate,
+		},
+		constants.UpdatedAt: time.Now().UTC(),
+	})
+	if cusErr.Exists() {
+		return
+	}
+
+	return
+}

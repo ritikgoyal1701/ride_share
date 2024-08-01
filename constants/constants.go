@@ -9,4 +9,5 @@ const (
 	Title         = "title"
 	Authorization = "Authorization"
 	UpdatedAt     = "updated_at"
+	Location      = "location"
 )

@@ -20,6 +20,6 @@ type Driver struct {
 }
 
 type Location struct {
-	XCoordinate uint64 `bson:"x"`
-	YCoordinate uint64 `bson:"y"`
+	XCoordinate int64 `bson:"x"`
+	YCoordinate int64 `bson:"y"`
 }

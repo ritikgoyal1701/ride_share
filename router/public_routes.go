@@ -25,6 +25,7 @@ func PublicRoutes(r *gin.Engine) (err error) {
 		drivers.POST("/", driverController.CreateDriver)
 		drivers.POST("/login", driverController.Login)
 		drivers.PUT("/logout", utils.AuthenticateJWT(models.TitleDriver), driverController.Logout)
+		drivers.PUT("/location", utils.AuthenticateJWT(models.TitleDriver), driverController.UpdateDriverLocation)
 	}
 
 	riders := r.Group("/api/v1/riders")

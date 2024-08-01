@@ -97,3 +97,34 @@ func (ctrl *Controller) Logout(ctx *gin.Context) {
 
 	responses.NewSuccessResponse(ctx, responses.NewSuccessMessage("Driver logout successfully"))
 }
+
+func (ctrl *Controller) UpdateDriverLocation(ctx *gin.Context) {
+	var req requests.LocationUpdate
+	err := ctx.ShouldBindJSON(&req)
+	if err != nil {
+		cusErr := error2.NewCustomError(http.StatusUnprocessableEntity, err.Error())
+		error2.NewErrorResponse(ctx, cusErr)
+		return
+	}
+
+	validateErr := validate.Get().Struct(req)
+	if validateErr != nil {
+		cusErr := error2.NewCustomError(http.StatusUnprocessableEntity, validateErr.Error())
+		error2.NewErrorResponse(ctx, cusErr)
+		return
+	}
+
+	userDetails, cusErr := utils.GetUserDetails(ctx)
+	if cusErr.Exists() {
+		error2.NewErrorResponse(ctx, cusErr)
+		return
+	}
+
+	cusErr = ctrl.driverService.UpdateDriverLocation(ctx, userDetails, req)
+	if cusErr.Exists() {
+		error2.NewErrorResponse(ctx, cusErr)
+		return
+	}
+
+	responses.NewSuccessResponse(ctx, responses.NewSuccessMessage("Location updated successfully"))
+}
