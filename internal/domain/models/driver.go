@@ -16,6 +16,7 @@ type Driver struct {
 	Jwt       string             `bson:"jwt,omitempty"`
 	Location  Location           `bson:"location,omitempty"`
 	CreatedAt time.Time          `bson:"created_at"`
+	UpdatedAt time.Time          `bson:"updated_at"`
 }
 
 type Location struct {

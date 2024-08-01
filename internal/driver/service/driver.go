@@ -118,7 +118,8 @@ func (s *Service) Login(
 			driver.ID,
 		},
 	}, map[string]interface{}{
-		constants.Jwt: token,
+		constants.Jwt:       token,
+		constants.UpdatedAt: time.Now().UTC(),
 	})
 	if cusErr.Exists() {
 		return
@@ -138,7 +139,8 @@ func (s *Service) Logout(ctx context.Context, userDetails models.UserDetails) (c
 			userDetails.ID,
 		},
 	}, map[string]interface{}{
-		constants.Jwt: "",
+		constants.Jwt:       "",
+		constants.UpdatedAt: time.Now().UTC(),
 	})
 	if cusErr.Exists() {
 		return

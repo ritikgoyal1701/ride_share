@@ -21,13 +21,13 @@ func GetUserDetails(ctx context.Context) (userDetails models.UserDetails, cusErr
 		return
 	}
 
-	title, ok := ctx.Value(constants.Title).(string)
+	title, ok := ctx.Value(constants.Title).(models.Title)
 	if !ok {
 		cusErr = error2.NewCustomError(http.StatusInternalServerError, "user title not found in ctx")
 		return
 	}
 
-	modelTitle, ok := models.StringToTitle[title]
+	_, ok = models.TitleToString[title]
 	if !ok {
 		cusErr = error2.NewCustomError(http.StatusInternalServerError, "Invalid title")
 		return
@@ -36,7 +36,7 @@ func GetUserDetails(ctx context.Context) (userDetails models.UserDetails, cusErr
 	userDetails = models.UserDetails{
 		ID:    id,
 		Email: email,
-		Title: modelTitle,
+		Title: title,
 	}
 	return
 }

@@ -2,7 +2,6 @@ package error
 
 import (
 	"github.com/gin-gonic/gin"
-	"net/http"
 )
 
 type CustomError struct {
@@ -30,7 +29,7 @@ func NewErrorResponse(ctx *gin.Context, cusErr CustomError) {
 		},
 	}
 
-	ctx.JSON(http.StatusBadRequest, res)
+	ctx.JSON(cusErr.StatusCode, res)
 }
 
 func NewCustomError(errorCode int, errorMessage string) (cusErr CustomError) {

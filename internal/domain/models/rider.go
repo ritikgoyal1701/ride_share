@@ -12,5 +12,6 @@ type Rider struct {
 	Email     string             `bson:"email,omitempty"`
 	Password  string             `bson:"password,omitempty"`
 	Jwt       string             `bson:"jwt,omitempty"`
+	UpdatedAt time.Time          `bson:"updated_at"`
 	CreatedAt time.Time          `bson:"created_at"`
 }
