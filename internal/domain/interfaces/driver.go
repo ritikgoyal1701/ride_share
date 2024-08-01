@@ -13,11 +13,14 @@ import (
 type (
 	DriverController interface {
 		CreateDriver(ctx *gin.Context)
+		Login(ctx *gin.Context)
+		Logout(ctx *gin.Context)
 	}
 
 	DriverService interface {
 		CreateDriver(ctx context.Context, req requests.CreateDriverRequest) (cusErr error2.CustomError)
 		Login(ctx context.Context, req requests.LoginRequest) (resp responses.LoginResp, cusErr error2.CustomError)
+		Logout(ctx context.Context, userDetails models.UserDetails) (cusErr error2.CustomError)
 	}
 
 	DriverRepository interface {

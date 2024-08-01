@@ -14,11 +14,14 @@ import (
 type (
 	RiderController interface {
 		CreateRider(ctx *gin.Context)
+		Login(ctx *gin.Context)
+		Logout(ctx *gin.Context)
 	}
 
 	RiderService interface {
 		CreateRider(ctx context.Context, req requests2.CreateRiderRequest) (cusErr error2.CustomError)
 		Login(ctx context.Context, req requests.LoginRequest) (resp responses.LoginResp, cusErr error2.CustomError)
+		Logout(ctx context.Context, userDetails models.UserDetails) (cusErr error2.CustomError)
 	}
 
 	RiderRepository interface {

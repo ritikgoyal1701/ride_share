@@ -138,3 +138,19 @@ func isTokenValid(token string) (isValid bool, err error) {
 	_, isValid, err = jwt.ValidateToken(token)
 	return
 }
+
+func (s *Service) Logout(ctx context.Context, userDetails models.UserDetails) (cusErr error2.CustomError) {
+	cusErr = s.riderRepository.UpdateRider(ctx, map[string]mongo.QueryFilter{
+		constants.MongoID: {
+			mongo.IDQuery,
+			userDetails.ID,
+		},
+	}, map[string]interface{}{
+		constants.Jwt: "",
+	})
+	if cusErr.Exists() {
+		return
+	}
+
+	return
+}

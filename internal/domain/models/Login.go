@@ -11,6 +11,16 @@ const (
 	TitleRider  Title = "rider"
 )
 
+var TitleToString = map[Title]string{
+	TitleDriver: "driver",
+	TitleRider:  "rider",
+}
+
+var StringToTitle = map[string]Title{
+	"driver": TitleDriver,
+	"rider":  TitleRider,
+}
+
 type Claims struct {
 	ID    string `json:"id"`
 	Email string `json:"email"`

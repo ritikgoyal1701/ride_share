@@ -131,6 +131,22 @@ func (s *Service) Login(
 	return
 }
 
+func (s *Service) Logout(ctx context.Context, userDetails models.UserDetails) (cusErr error2.CustomError) {
+	cusErr = s.driverRepository.UpdateDriver(ctx, map[string]mongo.QueryFilter{
+		constants.MongoID: {
+			mongo.IDQuery,
+			userDetails.ID,
+		},
+	}, map[string]interface{}{
+		constants.Jwt: "",
+	})
+	if cusErr.Exists() {
+		return
+	}
+
+	return
+}
+
 func isTokenValid(token string) (isValid bool, err error) {
 	if len(token) == 0 {
 		return

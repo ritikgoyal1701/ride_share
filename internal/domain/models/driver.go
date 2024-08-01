@@ -14,5 +14,11 @@ type Driver struct {
 	IsActive  bool               `bson:"is_active,omitempty"`
 	Password  string             `bson:"password,omitempty"`
 	Jwt       string             `bson:"jwt,omitempty"`
+	Location  Location           `bson:"location,omitempty"`
 	CreatedAt time.Time          `bson:"created_at"`
+}
+
+type Location struct {
+	XCoordinate uint64 `bson:"x"`
+	YCoordinate uint64 `bson:"y"`
 }

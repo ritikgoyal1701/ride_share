@@ -8,6 +8,7 @@ import (
 	"rideShare/internal/domain/interfaces"
 	error2 "rideShare/pkg/error"
 	"rideShare/pkg/responses"
+	"rideShare/pkg/utils"
 	"rideShare/pkg/validate"
 	"sync"
 )
@@ -80,4 +81,20 @@ func (ctrl *Controller) Login(ctx *gin.Context) {
 	}
 
 	responses.NewSuccessResponse(ctx, resp)
+}
+
+func (ctrl *Controller) Logout(ctx *gin.Context) {
+	userDetails, cusErr := utils.GetUserDetails(ctx)
+	if cusErr.Exists() {
+		error2.NewErrorResponse(ctx, cusErr)
+		return
+	}
+
+	cusErr = ctrl.riderService.Logout(ctx, userDetails)
+	if cusErr.Exists() {
+		error2.NewErrorResponse(ctx, cusErr)
+		return
+	}
+
+	responses.NewSuccessResponse(ctx, responses.NewSuccessMessage("Rider logout successfully"))
 }
