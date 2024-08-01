@@ -52,7 +52,7 @@ func (r *Repository) GetDriver(
 	}
 
 	if len(drivers) == 0 {
-		cusErr = error2.NewCustomError(http.StatusInternalServerError, "driver not found")
+		cusErr = error2.NewCustomError(http.StatusBadRequest, "driver not found")
 		return
 	}
 
@@ -90,6 +90,27 @@ func (r *Repository) GetDriversCount(
 	count, err := repo.db.CountDocuments(ctx, queryFilter)
 	if err != nil {
 		cusErr = error2.NewCustomError(http.StatusInternalServerError, fmt.Sprintf("Error in getting driver count | err :: %v", err.Error()))
+		return
+	}
+
+	return
+}
+
+func (r *Repository) UpdateDriver(
+	ctx context.Context,
+	filters map[string]mongo2.QueryFilter,
+	updates map[string]interface{},
+) (cusErr error2.CustomError) {
+	queryFilter := mongo2.BuildMongoQuery(ctx, filters)
+	queryUpdate := mongo2.BuildMongoSetQuery(updates)
+	res, err := r.db.UpdateOne(ctx, queryFilter, queryUpdate)
+	if err != nil {
+		cusErr = error2.NewCustomError(http.StatusInternalServerError, fmt.Sprintf("Error in updating driver | err :: %v", err.Error()))
+		return
+	}
+
+	if res.ModifiedCount == 0 {
+		cusErr = error2.NewCustomError(http.StatusBadRequest, fmt.Sprintf("Driver Not updated"))
 		return
 	}
 

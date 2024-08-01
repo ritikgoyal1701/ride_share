@@ -5,5 +5,6 @@ type CreateDriverRequest struct {
 	License   string `json:"license" validate:"required"`
 	ContactNo string `json:"contact_no" validate:"required"`
 	Email     string `json:"email" validate:"required"`
+	Password  string `json:"password" validate:"required"`
 	IsActive  bool   `json:"is_active"`
 }

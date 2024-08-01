@@ -12,5 +12,7 @@ type Driver struct {
 	ContactNo string             `bson:"contact_no,omitempty"`
 	Email     string             `bson:"email,omitempty"`
 	IsActive  bool               `bson:"is_active,omitempty"`
+	Password  string             `bson:"password,omitempty"`
+	Jwt       string             `bson:"jwt,omitempty"`
 	CreatedAt time.Time          `bson:"created_at"`
 }

@@ -21,11 +21,13 @@ func PublicRoutes(r *gin.Engine) (err error) {
 	drivers := r.Group("/api/v1/drivers")
 	{
 		drivers.POST("/", driverController.CreateDriver)
+		drivers.POST("/login", driverController.Login)
 	}
 
 	riders := r.Group("/api/v1/riders")
 	{
 		riders.POST("/", riderController.CreateRider)
+		riders.POST("/login", riderController.Login)
 	}
 
 	return

@@ -95,3 +95,24 @@ func (r *Repository) GetRidersCount(
 
 	return
 }
+
+func (r *Repository) UpdateRider(
+	ctx context.Context,
+	filters map[string]mongo2.QueryFilter,
+	updates map[string]interface{},
+) (cusErr error2.CustomError) {
+	queryFilter := mongo2.BuildMongoQuery(ctx, filters)
+	queryUpdate := mongo2.BuildMongoSetQuery(updates)
+	res, err := r.db.UpdateOne(ctx, queryFilter, queryUpdate)
+	if err != nil {
+		cusErr = error2.NewCustomError(http.StatusInternalServerError, fmt.Sprintf("Error in updating rider | err :: %v", err.Error()))
+		return
+	}
+
+	if res.ModifiedCount == 0 {
+		cusErr = error2.NewCustomError(http.StatusBadRequest, fmt.Sprintf("Rider Not updated"))
+		return
+	}
+
+	return
+}

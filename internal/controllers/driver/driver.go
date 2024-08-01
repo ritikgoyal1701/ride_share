@@ -55,3 +55,28 @@ func (ctrl *Controller) CreateDriver(ctx *gin.Context) {
 
 	responses.NewSuccessResponse(ctx, responses.NewSuccessMessage("Driver created successfully"))
 }
+
+func (ctrl *Controller) Login(ctx *gin.Context) {
+	var req requests.LoginRequest
+	err := ctx.ShouldBindJSON(&req)
+	if err != nil {
+		cusErr := error2.NewCustomError(http.StatusUnprocessableEntity, err.Error())
+		error2.NewErrorResponse(ctx, cusErr)
+		return
+	}
+
+	validateErr := validate.Get().Struct(req)
+	if validateErr != nil {
+		cusErr := error2.NewCustomError(http.StatusUnprocessableEntity, validateErr.Error())
+		error2.NewErrorResponse(ctx, cusErr)
+		return
+	}
+
+	resp, cusErr := ctrl.driverService.Login(ctx, req)
+	if cusErr.Exists() {
+		error2.NewErrorResponse(ctx, cusErr)
+		return
+	}
+
+	responses.NewSuccessResponse(ctx, resp)
+}

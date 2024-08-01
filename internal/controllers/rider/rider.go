@@ -3,6 +3,7 @@ package rider
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"rideShare/internal/controllers/driver/requests"
 	requests2 "rideShare/internal/controllers/rider/requests"
 	"rideShare/internal/domain/interfaces"
 	error2 "rideShare/pkg/error"
@@ -53,5 +54,30 @@ func (ctrl *Controller) CreateRider(ctx *gin.Context) {
 		return
 	}
 
-	responses.NewSuccessResponse(ctx, responses.NewSuccessMessage("Driver created successfully"))
+	responses.NewSuccessResponse(ctx, responses.NewSuccessMessage("Rider created successfully"))
+}
+
+func (ctrl *Controller) Login(ctx *gin.Context) {
+	var req requests.LoginRequest
+	err := ctx.ShouldBindJSON(&req)
+	if err != nil {
+		cusErr := error2.NewCustomError(http.StatusUnprocessableEntity, err.Error())
+		error2.NewErrorResponse(ctx, cusErr)
+		return
+	}
+
+	validateErr := validate.Get().Struct(req)
+	if validateErr != nil {
+		cusErr := error2.NewCustomError(http.StatusUnprocessableEntity, validateErr.Error())
+		error2.NewErrorResponse(ctx, cusErr)
+		return
+	}
+
+	resp, cusErr := ctrl.riderService.Login(ctx, req)
+	if cusErr.Exists() {
+		error2.NewErrorResponse(ctx, cusErr)
+		return
+	}
+
+	responses.NewSuccessResponse(ctx, resp)
 }

@@ -10,5 +10,7 @@ type Rider struct {
 	Name      string             `bson:"name,omitempty"`
 	ContactNo string             `bson:"contact_no,omitempty"`
 	Email     string             `bson:"email,omitempty"`
+	Password  string             `bson:"password,omitempty"`
+	Jwt       string             `bson:"jwt,omitempty"`
 	CreatedAt time.Time          `bson:"created_at"`
 }

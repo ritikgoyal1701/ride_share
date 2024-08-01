@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"rideShare/internal/controllers/driver/requests"
 	"rideShare/internal/domain/models"
+	"rideShare/internal/driver/service/responses"
 	mongo2 "rideShare/pkg/db/mongo"
 	error2 "rideShare/pkg/error"
 )
@@ -16,6 +17,7 @@ type (
 
 	DriverService interface {
 		CreateDriver(ctx context.Context, req requests.CreateDriverRequest) (cusErr error2.CustomError)
+		Login(ctx context.Context, req requests.LoginRequest) (resp responses.LoginResp, cusErr error2.CustomError)
 	}
 
 	DriverRepository interface {
@@ -23,5 +25,6 @@ type (
 		GetDriver(ctx context.Context, filters map[string]mongo2.QueryFilter) (driver *models.Driver, cusErr error2.CustomError)
 		GetDrivers(ctx context.Context, filters map[string]mongo2.QueryFilter, fields map[string]interface{}) (drivers []models.Driver, cusErr error2.CustomError)
 		GetDriversCount(ctx context.Context, filters map[string]mongo2.QueryFilter) (count int64, cusErr error2.CustomError)
+		UpdateDriver(ctx context.Context, filters map[string]mongo2.QueryFilter, updates map[string]interface{}) (cusErr error2.CustomError)
 	}
 )
