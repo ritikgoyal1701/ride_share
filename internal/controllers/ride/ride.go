@@ -1,9 +1,9 @@
-package driver
+package ride
 
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"rideShare/internal/controllers/driver/requests"
+	"rideShare/internal/controllers/ride/requests"
 	"rideShare/internal/domain/interfaces"
 	error2 "rideShare/pkg/error"
 	"rideShare/pkg/responses"
@@ -13,7 +13,7 @@ import (
 )
 
 type Controller struct {
-	driverService interfaces.DriverService
+	rideService interfaces.RideService
 }
 
 var (
@@ -22,18 +22,18 @@ var (
 )
 
 func NewController(
-	driverService interfaces.DriverService,
+	rideSvc interfaces.RideService,
 ) *Controller {
 	ctrlOnce.Do(func() {
 		ctrl = &Controller{
-			driverService: driverService,
+			rideService: rideSvc,
 		}
 	})
 	return ctrl
 }
 
-func (ctrl *Controller) CreateDriver(ctx *gin.Context) {
-	var req requests.CreateDriverRequest
+func (ctrl *Controller) GetRidePrice(ctx *gin.Context) {
+	var req requests.PriceRequest
 	err := ctx.ShouldBindJSON(&req)
 	if err != nil {
 		cusErr := error2.NewCustomError(http.StatusUnprocessableEntity, err.Error())
@@ -48,32 +48,13 @@ func (ctrl *Controller) CreateDriver(ctx *gin.Context) {
 		return
 	}
 
-	cusErr := ctrl.driverService.CreateDriver(ctx, req)
+	userDetails, cusErr := utils.GetUserDetails(ctx)
 	if cusErr.Exists() {
 		error2.NewErrorResponse(ctx, cusErr)
 		return
 	}
 
-	responses.NewSuccessResponse(ctx, responses.NewSuccessMessage("Driver created successfully"))
-}
-
-func (ctrl *Controller) Login(ctx *gin.Context) {
-	var req requests.LoginRequest
-	err := ctx.ShouldBindJSON(&req)
-	if err != nil {
-		cusErr := error2.NewCustomError(http.StatusUnprocessableEntity, err.Error())
-		error2.NewErrorResponse(ctx, cusErr)
-		return
-	}
-
-	validateErr := validate.Get().Struct(req)
-	if validateErr != nil {
-		cusErr := error2.NewCustomError(http.StatusUnprocessableEntity, validateErr.Error())
-		error2.NewErrorResponse(ctx, cusErr)
-		return
-	}
-
-	resp, cusErr := ctrl.driverService.Login(ctx, req)
+	resp, cusErr := ctrl.rideService.GetRidePrice(ctx, userDetails, req)
 	if cusErr.Exists() {
 		error2.NewErrorResponse(ctx, cusErr)
 		return
@@ -82,24 +63,8 @@ func (ctrl *Controller) Login(ctx *gin.Context) {
 	responses.NewSuccessResponse(ctx, resp)
 }
 
-func (ctrl *Controller) Logout(ctx *gin.Context) {
-	userDetails, cusErr := utils.GetUserDetails(ctx)
-	if cusErr.Exists() {
-		error2.NewErrorResponse(ctx, cusErr)
-		return
-	}
-
-	cusErr = ctrl.driverService.Logout(ctx, userDetails)
-	if cusErr.Exists() {
-		error2.NewErrorResponse(ctx, cusErr)
-		return
-	}
-
-	responses.NewSuccessResponse(ctx, responses.NewSuccessMessage("Driver logout successfully"))
-}
-
-func (ctrl *Controller) UpdateDriverLocation(ctx *gin.Context) {
-	var req requests.LocationUpdate
+func (ctrl *Controller) CreateRide(ctx *gin.Context) {
+	var req requests.CreateRideRequest
 	err := ctx.ShouldBindJSON(&req)
 	if err != nil {
 		cusErr := error2.NewCustomError(http.StatusUnprocessableEntity, err.Error())
@@ -120,17 +85,17 @@ func (ctrl *Controller) UpdateDriverLocation(ctx *gin.Context) {
 		return
 	}
 
-	cusErr = ctrl.driverService.UpdateDriverLocation(ctx, userDetails, req)
+	cusErr = ctrl.rideService.CreateRide(ctx, userDetails, req)
 	if cusErr.Exists() {
 		error2.NewErrorResponse(ctx, cusErr)
 		return
 	}
 
-	responses.NewSuccessResponse(ctx, responses.NewSuccessMessage("Location updated successfully"))
+	responses.NewSuccessResponse(ctx, responses.NewSuccessMessage("Ride created successfully"))
 }
 
-func (ctrl *Controller) GetNearbyDrivers(ctx *gin.Context) {
-	var req requests.NearByDriversRequest
+func (ctrl *Controller) GetRides(ctx *gin.Context) {
+	var req requests.Location
 	err := ctx.ShouldBindJSON(&req)
 	if err != nil {
 		cusErr := error2.NewCustomError(http.StatusUnprocessableEntity, err.Error())
@@ -151,7 +116,7 @@ func (ctrl *Controller) GetNearbyDrivers(ctx *gin.Context) {
 		return
 	}
 
-	resp, cusErr := ctrl.driverService.GetNearbyDrivers(ctx, userDetails, req)
+	resp, cusErr := ctrl.rideService.GetRides(ctx, userDetails, req)
 	if cusErr.Exists() {
 		error2.NewErrorResponse(ctx, cusErr)
 		return

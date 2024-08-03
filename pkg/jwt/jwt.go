@@ -41,6 +41,7 @@ func ValidateToken(tokenString string) (claims *models.Claims, isValid bool, err
 	})
 
 	if err != nil {
+		err = nil
 		return
 	}
 

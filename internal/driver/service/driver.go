@@ -3,11 +3,13 @@ package driverService
 import (
 	"context"
 	"fmt"
+	"go.mongodb.org/mongo-driver/bson"
 	"net/http"
 	"rideShare/constants"
 	"rideShare/internal/controllers/driver/requests"
 	"rideShare/internal/domain/interfaces"
 	"rideShare/internal/domain/models"
+	"rideShare/internal/driver/service/adapter"
 	"rideShare/internal/driver/service/responses"
 	"rideShare/pkg/db/mongo"
 	error2 "rideShare/pkg/error"
@@ -19,11 +21,13 @@ import (
 
 type Service struct {
 	driverRepository interfaces.DriverRepository
+	riderRepository  interfaces.RiderRepository
 }
 
 var (
 	svc     *Service
 	svcOnce sync.Once
+	radius  = 10.0 / 6378.1
 )
 
 func NewService(driverRepo interfaces.DriverRepository) *Service {
@@ -170,8 +174,7 @@ func (s *Service) UpdateDriverLocation(
 		},
 	}, map[string]interface{}{
 		constants.Location: models.Location{
-			XCoordinate: req.XCoordinate,
-			YCoordinate: req.YCoordinate,
+			Coordinates: []float64{req.XCoordinate, req.YCoordinate},
 		},
 		constants.UpdatedAt: time.Now().UTC(),
 	})
@@ -179,5 +182,35 @@ func (s *Service) UpdateDriverLocation(
 		return
 	}
 
+	return
+}
+
+func (s *Service) GetNearbyDrivers(
+	ctx context.Context,
+	userDetails models.UserDetails,
+	req requests.NearByDriversRequest,
+) (driversResp []responses.Driver, cusErr error2.CustomError) {
+	drivers, cusErr := s.driverRepository.GetDrivers(ctx, map[string]mongo.QueryFilter{
+		"$expr": {
+			Query: mongo.CustomQuery,
+			Value: bson.M{
+				"$lt": bson.A{
+					bson.M{"$add": bson.A{
+						bson.M{"$abs": bson.M{"$subtract": bson.A{bson.M{"$arrayElemAt": bson.A{"$location.coordinates", 0}}, req.XCoordinate}}},
+						bson.M{"$abs": bson.M{"$subtract": bson.A{bson.M{"$arrayElemAt": bson.A{"$location.coordinates", 1}}, req.YCoordinate}}},
+					}},
+					10,
+				},
+			}},
+		"is_on_ride": {
+			Query: mongo.BoolQuery,
+			Value: false,
+		},
+	}, map[string]interface{}{})
+	if cusErr.Exists() {
+		return
+	}
+
+	driversResp = adapter.GetNearbyDrivers(drivers)
 	return
 }

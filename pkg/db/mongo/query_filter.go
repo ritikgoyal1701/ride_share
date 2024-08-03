@@ -20,6 +20,7 @@ const (
 	LikeQuery                QueryType = "like_query"
 	CaseInsensitiveLikeQuery QueryType = "case_insensitive_like_query"
 	CaseInsensitiveFindQuery QueryType = "case_insensitive_find_query"
+	CustomQuery              QueryType = "custom_query"
 )
 
 func BuildMongoQuery(ctx context.Context, filter map[string]QueryFilter) bson.D {
@@ -56,7 +57,11 @@ func BuildMongoQuery(ctx context.Context, filter map[string]QueryFilter) bson.D 
 			if val, ok := queryFilter.Value.(string); ok {
 				result = append(result, bson.E{Key: key, Value: bson.M{"$regex": "^" + val + "$", "$options": "i"}})
 			}
+
+		case CustomQuery:
+			result = append(result, bson.E{Key: key, Value: queryFilter.Value})
 		}
+
 	}
 
 	return result

@@ -16,6 +16,7 @@ type (
 		Login(ctx *gin.Context)
 		Logout(ctx *gin.Context)
 		UpdateDriverLocation(ctx *gin.Context)
+		GetNearbyDrivers(ctx *gin.Context)
 	}
 
 	DriverService interface {
@@ -23,6 +24,7 @@ type (
 		Login(ctx context.Context, req requests.LoginRequest) (resp responses.LoginResp, cusErr error2.CustomError)
 		Logout(ctx context.Context, userDetails models.UserDetails) (cusErr error2.CustomError)
 		UpdateDriverLocation(ctx context.Context, userDetails models.UserDetails, req requests.LocationUpdate) (cusErr error2.CustomError)
+		GetNearbyDrivers(ctx context.Context, userDetails models.UserDetails, req requests.NearByDriversRequest) (driversResp []responses.Driver, cusErr error2.CustomError)
 	}
 
 	DriverRepository interface {
