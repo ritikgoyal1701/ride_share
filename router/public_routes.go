@@ -7,6 +7,7 @@ import (
 	"rideShare/internal/controllers/rider"
 	"rideShare/internal/domain/models"
 	"rideShare/pkg/db/mongo"
+	"rideShare/pkg/redis"
 	"rideShare/pkg/utils"
 )
 
@@ -21,7 +22,7 @@ func PublicRoutes(r *gin.Engine) (err error) {
 		return
 	}
 
-	rideController, err := ride.RideControllerWire(mongo.Get().Database)
+	rideController, err := ride.RideControllerWire(mongo.Get().Database, redis.GetClient().Client)
 	if err != nil {
 		return
 	}
@@ -39,7 +40,7 @@ func PublicRoutes(r *gin.Engine) (err error) {
 	{
 		rides.GET("/price", utils.AuthenticateJWT(models.TitleRider), rideController.GetRidePrice)
 		rides.POST("/", utils.AuthenticateJWT(models.TitleRider), rideController.CreateRide)
-		rides.GET("/", utils.AuthenticateJWT(models.TitleDriver), rideController.CreateRide)
+		rides.GET("/", utils.AuthenticateJWT(models.TitleDriver), rideController.GetRides)
 	}
 
 	riders := r.Group("/api/v1/riders")

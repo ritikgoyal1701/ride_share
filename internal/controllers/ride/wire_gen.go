@@ -7,22 +7,25 @@
 package ride
 
 import (
+	"github.com/go-redis/redis/v8"
 	"go.mongodb.org/mongo-driver/mongo"
 	"rideShare/internal/driver"
 	"rideShare/internal/driver/service"
 	"rideShare/internal/ride"
 	"rideShare/internal/ride/service"
 	"rideShare/internal/rider"
+	"rideShare/pkg/lock"
 )
 
 // Injectors from wire.go:
 
-func RideControllerWire(client *mongo.Database) (*Controller, error) {
+func RideControllerWire(client *mongo.Database, redisClient *redis.Client) (*Controller, error) {
 	repository := ride.NewRepository(client)
 	driverRepository := driver.NewRepository(client)
 	service := driverService.NewService(driverRepository)
 	riderRepository := rider.NewRepository(client)
-	rideServiceService := rideService.NewService(repository, service, driverRepository, riderRepository)
+	redisLock := lock.NewRedisLock(redisClient)
+	rideServiceService := rideService.NewService(repository, service, driverRepository, riderRepository, redisLock)
 	controller := NewController(rideServiceService)
 	return controller, nil
 }

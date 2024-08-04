@@ -15,6 +15,7 @@ import (
 	responses2 "rideShare/internal/ride/service/responses"
 	mongo2 "rideShare/pkg/db/mongo"
 	error2 "rideShare/pkg/error"
+	"rideShare/pkg/lock"
 	"rideShare/pkg/utils"
 	"sync"
 	"time"
@@ -25,6 +26,7 @@ type Service struct {
 	driverService    interfaces.DriverService
 	driverRepository interfaces.DriverRepository
 	ridersRepository interfaces.RiderRepository
+	locker           lock.Locker
 }
 
 var (
@@ -37,6 +39,7 @@ func NewService(
 	driverService interfaces.DriverService,
 	driverRepo interfaces.DriverRepository,
 	ridersRepo interfaces.RiderRepository,
+	locker lock.Locker,
 ) *Service {
 	svcOnce.Do(func() {
 		svc = &Service{
@@ -44,6 +47,7 @@ func NewService(
 			driverService:    driverService,
 			driverRepository: driverRepo,
 			ridersRepository: ridersRepo,
+			locker:           locker,
 		}
 	})
 
@@ -94,7 +98,7 @@ func (s *Service) CreateRide(
 	req requests2.CreateRideRequest,
 ) (cusErr error2.CustomError) {
 	rider, cusErr := s.ridersRepository.GetRider(ctx, map[string]mongo2.QueryFilter{
-		constants.ID: {
+		constants.MongoID: {
 			mongo2.IDQuery,
 			userDetails.ID,
 		},

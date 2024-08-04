@@ -11,21 +11,27 @@ type (
 
 const (
 	RideStatusPending    RideStatus = "pending"
+	RideStatusAccepted   RideStatus = "accepted"
 	RideStatusInProgress RideStatus = "in_progress"
 	RideStatusCompleted  RideStatus = "completed"
+	RideStatusCancelled  RideStatus = "cancelled"
 )
 
 var (
 	RideStatusToString = map[RideStatus]string{
 		RideStatusPending:    "pending",
+		RideStatusAccepted:   "accepted",
 		RideStatusInProgress: "in_progress",
 		RideStatusCompleted:  "completed",
+		RideStatusCancelled:  "cancelled",
 	}
 
 	StringToRideStatus = map[string]RideStatus{
 		"pending":     RideStatusPending,
+		"accepted":    RideStatusAccepted,
 		"in_progress": RideStatusInProgress,
 		"completed":   RideStatusCompleted,
+		"cancelled":   RideStatusCancelled,
 	}
 )
 
