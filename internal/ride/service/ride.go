@@ -101,7 +101,7 @@ func (s *Service) CreateRide(
 	ctx context.Context,
 	userDetails models.UserDetails,
 	req requests2.CreateRideRequest,
-) (cusErr error2.CustomError) {
+) (resp responses2.GetRide, cusErr error2.CustomError) {
 	rider, cusErr := s.ridersRepository.GetRider(ctx, map[string]mongo2.QueryFilter{
 		constants.MongoID: {
 			mongo2.IDQuery,
@@ -163,6 +163,7 @@ func (s *Service) CreateRide(
 		return
 	}
 
+	resp = adapter.GetRideDetails(ride, nil)
 	return
 }
 
@@ -209,6 +210,11 @@ func (s *Service) AcceptRide(
 		},
 	})
 	if cusErr.Exists() {
+		return
+	}
+
+	if driver.IsOnRide {
+		cusErr = error2.NewCustomError(http.StatusBadRequest, "One ride is already in progress")
 		return
 	}
 
@@ -302,6 +308,10 @@ func (s *Service) VerifyRide(
 			mongo2.ExactQuery,
 			models.RideStatusAccepted,
 		},
+		"driver.id": {
+			mongo2.ExactQuery,
+			userDetails.ID,
+		},
 	})
 	if cusErr.Exists() {
 		return
@@ -382,6 +392,10 @@ func (s *Service) CancelRide(
 			mongo2.ExactQuery,
 			models.RideStatusAccepted,
 		},
+		"rider.id": {
+			mongo2.ExactQuery,
+			userDetails.ID,
+		},
 	})
 	if cusErr.Exists() {
 		return
@@ -443,7 +457,7 @@ func (s *Service) CancelRide(
 	cusErr = s.driverRepository.UpdateDriver(ctx, map[string]mongo2.QueryFilter{
 		constants.MongoID: {
 			mongo2.IDQuery,
-			userDetails.ID,
+			ride.Driver.ID,
 		},
 		"is_on_ride": {
 			mongo2.ExactQuery,
@@ -470,6 +484,10 @@ func (s *Service) CompleteRide(
 		constants.Status: {
 			mongo2.ExactQuery,
 			models.RideStatusInProgress,
+		},
+		"driver.id": {
+			mongo2.ExactQuery,
+			userDetails.ID,
 		},
 	})
 	if cusErr.Exists() {
@@ -519,7 +537,7 @@ func (s *Service) CompleteRide(
 		},
 		constants.Status: {
 			mongo2.ExactQuery,
-			models.RideStatusAccepted,
+			models.RideStatusInProgress,
 		},
 	}, map[string]interface{}{
 		constants.Status:    models.RideStatusCompleted,
@@ -561,17 +579,20 @@ func (s *Service) GetRide(
 		return
 	}
 
-	drivers, cusErr := s.driverRepository.GetDrivers(ctx, map[string]mongo2.QueryFilter{
-		constants.MongoID: {
-			mongo2.IDQuery,
-			ride.Driver.ID,
-		},
-	}, map[string]interface{}{})
-	if cusErr.Exists() {
-		return
+	var driver *models.Driver
+	if !ride.RidePending() {
+		driver, cusErr = s.driverRepository.GetDriver(ctx, map[string]mongo2.QueryFilter{
+			constants.MongoID: {
+				mongo2.IDQuery,
+				ride.Driver.ID,
+			},
+		})
+		if cusErr.Exists() {
+			return
+		}
 	}
 
-	resp = adapter.GetRideDetails(ride, drivers)
+	resp = adapter.GetRideDetails(ride, driver)
 	return
 }
 

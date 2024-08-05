@@ -3,7 +3,7 @@ package responses
 type GetRide struct {
 	ID             string   `json:"id"`
 	Rider          User     `json:"rider"`
-	Driver         User     `json:"driver"`
+	Driver         User     `json:"driver,omitempty"`
 	DriverLocation Location `json:"driver_location"`
 	StartLocation  Location `json:"start_location"`
 	DropLocation   Location `json:"drop_location"`

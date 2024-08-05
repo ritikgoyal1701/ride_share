@@ -43,7 +43,7 @@ func PublicRoutes(r *gin.Engine) (err error) {
 		rides.PUT("/:ride_id/accept", utils.AuthenticateJWT(models.TitleDriver), rideController.AcceptRide)
 		rides.PUT("/:ride_id/cancel", utils.AuthenticateJWT(models.TitleRider), rideController.CancelRide)
 		rides.PUT("/:ride_id/verify", utils.AuthenticateJWT(models.TitleDriver), rideController.VerifyRide)
-		rides.PUT("/:ride_id/complete", utils.AuthenticateJWT(models.TitleRider), rideController.CompleteRide)
+		rides.PUT("/:ride_id/complete", utils.AuthenticateJWT(models.TitleDriver), rideController.CompleteRide)
 		rides.GET("/", utils.AuthenticateJWT(models.TitleDriver), rideController.GetRides)
 		rides.GET("/:ride_id", utils.AuthenticateJWT(""), rideController.GetRide)
 		rides.GET("/past", utils.AuthenticateJWT(""), rideController.GetPastRides)

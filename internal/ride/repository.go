@@ -52,7 +52,7 @@ func (r *Repository) GetRide(
 	}
 
 	if len(rides) == 0 {
-		cusErr = error2.NewCustomError(http.StatusInternalServerError, fmt.Sprintf("Ride not found"))
+		cusErr = error2.NewCustomError(http.StatusBadRequest, fmt.Sprintf("Ride not found"))
 		return
 	}
 

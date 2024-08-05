@@ -86,13 +86,13 @@ func (ctrl *Controller) CreateRide(ctx *gin.Context) {
 		return
 	}
 
-	cusErr = ctrl.rideService.CreateRide(ctx, userDetails, req)
+	resp, cusErr := ctrl.rideService.CreateRide(ctx, userDetails, req)
 	if cusErr.Exists() {
 		error2.NewErrorResponse(ctx, cusErr)
 		return
 	}
 
-	responses.NewSuccessResponse(ctx, responses.NewSuccessMessage("Ride created successfully"))
+	responses.NewSuccessResponse(ctx, resp)
 }
 
 func (ctrl *Controller) GetRides(ctx *gin.Context) {

@@ -5,7 +5,7 @@ import (
 	responses2 "rideShare/internal/ride/service/responses"
 )
 
-func GetRideDetails(ride *models.Ride, drivers []models.Driver) (rideResp responses2.GetRide) {
+func GetRideDetails(ride *models.Ride, driver *models.Driver) (rideResp responses2.GetRide) {
 	rideResp = responses2.GetRide{
 		ID: ride.ID.Hex(),
 		Rider: responses2.User{
@@ -20,14 +20,14 @@ func GetRideDetails(ride *models.Ride, drivers []models.Driver) (rideResp respon
 		Distance:      ride.Distance,
 	}
 
-	if len(drivers) > 0 {
+	if driver != nil {
 		rideResp.Driver = responses2.User{
-			ID:    drivers[0].ID.Hex(),
-			Name:  drivers[0].Name,
-			Email: drivers[0].Email,
+			ID:    driver.ID.Hex(),
+			Name:  driver.Name,
+			Email: driver.Email,
 		}
 
-		rideResp.DriverLocation = getLocationResp(drivers[0].Location.Coordinates)
+		rideResp.DriverLocation = getLocationResp(driver.Location.Coordinates)
 	}
 
 	return

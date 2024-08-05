@@ -25,7 +25,7 @@ type (
 	}
 
 	RideService interface {
-		CreateRide(ctx context.Context, userDetails models.UserDetails, req requests2.CreateRideRequest) (cusErr error2.CustomError)
+		CreateRide(ctx context.Context, userDetails models.UserDetails, req requests2.CreateRideRequest) (resp responses2.GetRide, cusErr error2.CustomError)
 		GetRidePrice(ctx context.Context, userDetails models.UserDetails, req requests2.PriceRequest) (resp responses.PriceResponse, cusErr error2.CustomError)
 		GetRides(ctx context.Context, userDetails models.UserDetails, req requests2.Location) (resp []responses2.GetRides, cusErr error2.CustomError)
 		CompleteRide(ctx context.Context, rideID string, userDetails models.UserDetails) (cusErr error2.CustomError)
