@@ -27,3 +27,11 @@ type Claims struct {
 	Title Title  `json:"title"`
 	jwt.StandardClaims
 }
+
+func (t Title) IsDriver() bool {
+	return t == TitleDriver
+}
+
+func (t Title) IsRider() bool {
+	return t == TitleRider
+}

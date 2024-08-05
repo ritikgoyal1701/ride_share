@@ -7,6 +7,7 @@ type GetRide struct {
 	DriverLocation Location `json:"driver_location"`
 	StartLocation  Location `json:"start_location"`
 	DropLocation   Location `json:"drop_location"`
+	Status         string   `json:"status"`
 	Price          float64  `json:"price"`
 	Distance       float64  `json:"distance"`
 }

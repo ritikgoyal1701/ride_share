@@ -45,6 +45,8 @@ func PublicRoutes(r *gin.Engine) (err error) {
 		rides.PUT("/:ride_id/verify", utils.AuthenticateJWT(models.TitleDriver), rideController.VerifyRide)
 		rides.PUT("/:ride_id/complete", utils.AuthenticateJWT(models.TitleRider), rideController.CompleteRide)
 		rides.GET("/", utils.AuthenticateJWT(models.TitleDriver), rideController.GetRides)
+		rides.GET("/:ride_id", utils.AuthenticateJWT(""), rideController.GetRide)
+		rides.GET("/past", utils.AuthenticateJWT(""), rideController.GetPastRides)
 	}
 
 	riders := r.Group("/api/v1/riders")

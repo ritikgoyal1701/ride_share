@@ -126,6 +126,22 @@ func (ctrl *Controller) GetRides(ctx *gin.Context) {
 	responses.NewSuccessResponse(ctx, resp)
 }
 
+func (ctrl *Controller) GetRide(ctx *gin.Context) {
+	userDetails, cusErr := utils.GetUserDetails(ctx)
+	if cusErr.Exists() {
+		error2.NewErrorResponse(ctx, cusErr)
+		return
+	}
+
+	resp, cusErr := ctrl.rideService.GetRide(ctx, ctx.Param(constants.RideID), userDetails)
+	if cusErr.Exists() {
+		error2.NewErrorResponse(ctx, cusErr)
+		return
+	}
+
+	responses.NewSuccessResponse(ctx, resp)
+}
+
 func (ctrl *Controller) CompleteRide(ctx *gin.Context) {
 	userDetails, cusErr := utils.GetUserDetails(ctx)
 	if cusErr.Exists() {
@@ -203,4 +219,20 @@ func (ctrl *Controller) VerifyRide(ctx *gin.Context) {
 	}
 
 	responses.NewSuccessResponse(ctx, responses.NewSuccessMessage("verified successfully"))
+}
+
+func (ctrl *Controller) GetPastRides(ctx *gin.Context) {
+	userDetails, cusErr := utils.GetUserDetails(ctx)
+	if cusErr.Exists() {
+		error2.NewErrorResponse(ctx, cusErr)
+		return
+	}
+
+	resp, cusErr := ctrl.rideService.GetPastRides(ctx, userDetails)
+	if cusErr.Exists() {
+		error2.NewErrorResponse(ctx, cusErr)
+		return
+	}
+
+	responses.NewSuccessResponse(ctx, resp)
 }

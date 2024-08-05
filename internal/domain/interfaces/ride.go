@@ -20,6 +20,8 @@ type (
 		AcceptRide(ctx *gin.Context)
 		CancelRide(ctx *gin.Context)
 		CompleteRide(ctx *gin.Context)
+		GetRide(ctx *gin.Context)
+		GetPastRides(ctx *gin.Context)
 	}
 
 	RideService interface {
@@ -30,6 +32,8 @@ type (
 		CancelRide(ctx context.Context, rideID string, userDetails models.UserDetails) (cusErr error2.CustomError)
 		VerifyRide(ctx context.Context, rideID string, userDetails models.UserDetails, req requests2.VerificationRequest) (cusErr error2.CustomError)
 		AcceptRide(ctx context.Context, rideID string, userDetails models.UserDetails) (cusErr error2.CustomError)
+		GetRide(ctx context.Context, rideID string, userDetails models.UserDetails) (resp responses2.GetRide, cusErr error2.CustomError)
+		GetPastRides(ctx context.Context, userDetails models.UserDetails) (resp []responses2.GetRide, cusErr error2.CustomError)
 	}
 
 	RideRepository interface {

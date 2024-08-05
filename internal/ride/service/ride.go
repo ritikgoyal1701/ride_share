@@ -546,6 +546,65 @@ func (s *Service) CompleteRide(
 	return
 }
 
+func (s *Service) GetRide(
+	ctx context.Context,
+	rideID string,
+	userDetails models.UserDetails,
+) (resp responses2.GetRide, cusErr error2.CustomError) {
+	ride, cusErr := s.rideRepository.GetRide(ctx, map[string]mongo2.QueryFilter{
+		constants.MongoID: {
+			mongo2.IDQuery,
+			rideID,
+		},
+	})
+	if cusErr.Exists() {
+		return
+	}
+
+	drivers, cusErr := s.driverRepository.GetDrivers(ctx, map[string]mongo2.QueryFilter{
+		constants.MongoID: {
+			mongo2.IDQuery,
+			ride.Driver.ID,
+		},
+	}, map[string]interface{}{})
+	if cusErr.Exists() {
+		return
+	}
+
+	resp = adapter.GetRideDetails(ride, drivers)
+	return
+}
+
+func (s *Service) GetPastRides(
+	ctx context.Context,
+	userDetails models.UserDetails,
+) (resp []responses2.GetRide, cusErr error2.CustomError) {
+	queryFilters := map[string]mongo2.QueryFilter{}
+	if userDetails.Title.IsDriver() {
+		queryFilters = map[string]mongo2.QueryFilter{
+			"driver.id": {
+				mongo2.ExactQuery,
+				userDetails.ID,
+			},
+		}
+	} else if userDetails.Title.IsRider() {
+		queryFilters = map[string]mongo2.QueryFilter{
+			"rider.id": {
+				mongo2.ExactQuery,
+				userDetails.ID,
+			},
+		}
+	}
+
+	rides, cusErr := s.rideRepository.GetRides(ctx, queryFilters, map[string]interface{}{})
+	if cusErr.Exists() {
+		return
+	}
+
+	resp = adapter.GetPastRides(rides)
+	return
+}
+
 func getDriverLockKey(driverID string) string {
 	return "driver_" + driverID
 }
