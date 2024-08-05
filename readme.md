@@ -17,6 +17,11 @@ Additionally, you need to download the following dependencies:
 To run the program, use the following command:
 <i>go run *.go</i>
 
+<b>Assumptions</b>
+
+Following assumptions were made, which can be improved in the future.
+1. One account is login in 1 device only.
+
 <b>Enhancements</b>
 
 To improve the application, consider implementing the following enhancements:
