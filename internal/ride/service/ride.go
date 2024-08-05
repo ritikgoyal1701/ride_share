@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
+	"log"
 	"net/http"
 	"rideShare/constants"
 	"rideShare/internal/controllers/driver/requests"
@@ -19,6 +20,10 @@ import (
 	"rideShare/pkg/utils"
 	"sync"
 	"time"
+)
+
+const (
+	rideLock = time.Second * 10
 )
 
 type Service struct {
@@ -190,4 +195,361 @@ func (s *Service) GetRides(
 
 	resp = adapter.GetRides(rides, req)
 	return
+}
+
+func (s *Service) AcceptRide(
+	ctx context.Context,
+	rideID string,
+	userDetails models.UserDetails,
+) (cusErr error2.CustomError) {
+	driver, cusErr := s.driverRepository.GetDriver(ctx, map[string]mongo2.QueryFilter{
+		constants.MongoID: {
+			mongo2.IDQuery,
+			userDetails.ID,
+		},
+	})
+	if cusErr.Exists() {
+		return
+	}
+
+	lockAcquired, lockErr := s.locker.Lock(ctx, getRideLockKey(rideID), rideLock)
+	if lockErr != nil {
+		cusErr = error2.NewCustomError(http.StatusInternalServerError, fmt.Sprintf("unable to acquire lock | err :: %v", lockErr.Error()))
+		return
+	}
+
+	if !lockAcquired {
+		cusErr = error2.NewCustomError(http.StatusBadRequest, fmt.Sprintf("unable to acquire lock"))
+		return
+	}
+
+	defer func(locker lock.Locker, ctx context.Context, lockKey string) {
+		_, releaseErr := locker.Release(ctx, lockKey)
+		if releaseErr != nil {
+			log.Printf("unable to release lock for %v", lockKey)
+		}
+	}(s.locker, ctx, getRideLockKey(rideID))
+
+	lockAcquired, lockErr = s.locker.Lock(ctx, getDriverLockKey(userDetails.ID), rideLock)
+	if lockErr != nil {
+		cusErr = error2.NewCustomError(http.StatusInternalServerError, fmt.Sprintf("unable to acquire lock | err :: %v", lockErr.Error()))
+		return
+	}
+
+	if !lockAcquired {
+		cusErr = error2.NewCustomError(http.StatusBadRequest, fmt.Sprintf("unable to acquire lock"))
+		return
+	}
+
+	defer func(locker lock.Locker, ctx context.Context, lockKey string) {
+		_, releaseErr := locker.Release(ctx, lockKey)
+		if releaseErr != nil {
+			log.Printf("unable to release lock for %v", lockKey)
+		}
+	}(s.locker, ctx, getDriverLockKey(userDetails.ID))
+
+	cusErr = s.rideRepository.UpdateRide(ctx, map[string]mongo2.QueryFilter{
+		constants.MongoID: {
+			mongo2.IDQuery,
+			rideID,
+		},
+		constants.Status: {
+			mongo2.ExactQuery,
+			models.RideStatusPending,
+		},
+	}, map[string]interface{}{
+		constants.Driver: models.User{
+			ID:    userDetails.ID,
+			Name:  driver.Name,
+			Email: userDetails.Email,
+		},
+		constants.Status:    models.RideStatusAccepted,
+		constants.UpdatedAt: time.Now().UTC(),
+	})
+	if cusErr.Exists() {
+		return
+	}
+
+	cusErr = s.driverRepository.UpdateDriver(ctx, map[string]mongo2.QueryFilter{
+		constants.MongoID: {
+			mongo2.IDQuery,
+			userDetails.ID,
+		},
+		"is_on_ride": {
+			mongo2.ExactQuery,
+			false,
+		},
+	}, map[string]interface{}{
+		"is_on_ride":        true,
+		constants.UpdatedAt: time.Now().UTC(),
+	})
+
+	return
+}
+
+func (s *Service) VerifyRide(
+	ctx context.Context,
+	rideID string,
+	userDetails models.UserDetails,
+	req requests2.VerificationRequest,
+) (cusErr error2.CustomError) {
+	ride, cusErr := s.rideRepository.GetRide(ctx, map[string]mongo2.QueryFilter{
+		constants.MongoID: {
+			mongo2.IDQuery,
+			rideID,
+		},
+		constants.Status: {
+			mongo2.ExactQuery,
+			models.RideStatusAccepted,
+		},
+	})
+	if cusErr.Exists() {
+		return
+	}
+
+	if ride.Verification != req.OTP {
+		cusErr = error2.NewCustomError(http.StatusBadRequest, "otp verification error")
+		return
+	}
+
+	lockAcquired, lockErr := s.locker.Lock(ctx, getRideLockKey(rideID), rideLock)
+	if lockErr != nil {
+		cusErr = error2.NewCustomError(http.StatusInternalServerError, fmt.Sprintf("unable to acquire lock | err :: %v", lockErr.Error()))
+		return
+	}
+
+	if !lockAcquired {
+		cusErr = error2.NewCustomError(http.StatusBadRequest, fmt.Sprintf("unable to acquire lock"))
+		return
+	}
+
+	defer func(locker lock.Locker, ctx context.Context, lockKey string) {
+		_, releaseErr := locker.Release(ctx, lockKey)
+		if releaseErr != nil {
+			log.Printf("unable to release lock for %v", lockKey)
+		}
+	}(s.locker, ctx, getRideLockKey(rideID))
+
+	lockAcquired, lockErr = s.locker.Lock(ctx, getDriverLockKey(userDetails.ID), rideLock)
+	if lockErr != nil {
+		cusErr = error2.NewCustomError(http.StatusInternalServerError, fmt.Sprintf("unable to acquire lock | err :: %v", lockErr.Error()))
+		return
+	}
+
+	if !lockAcquired {
+		cusErr = error2.NewCustomError(http.StatusBadRequest, fmt.Sprintf("unable to acquire lock"))
+		return
+	}
+
+	defer func(locker lock.Locker, ctx context.Context, lockKey string) {
+		_, releaseErr := locker.Release(ctx, lockKey)
+		if releaseErr != nil {
+			log.Printf("unable to release lock for %v", lockKey)
+		}
+	}(s.locker, ctx, getDriverLockKey(userDetails.ID))
+
+	cusErr = s.rideRepository.UpdateRide(ctx, map[string]mongo2.QueryFilter{
+		constants.MongoID: {
+			mongo2.IDQuery,
+			rideID,
+		},
+		constants.Status: {
+			mongo2.ExactQuery,
+			models.RideStatusAccepted,
+		},
+	}, map[string]interface{}{
+		constants.Status:    models.RideStatusInProgress,
+		constants.UpdatedAt: time.Now().UTC(),
+	})
+	if cusErr.Exists() {
+		return
+	}
+
+	return
+}
+
+func (s *Service) CancelRide(
+	ctx context.Context,
+	rideID string,
+	userDetails models.UserDetails,
+) (cusErr error2.CustomError) {
+	ride, cusErr := s.rideRepository.GetRide(ctx, map[string]mongo2.QueryFilter{
+		constants.MongoID: {
+			mongo2.IDQuery,
+			rideID,
+		},
+		constants.Status: {
+			mongo2.ExactQuery,
+			models.RideStatusAccepted,
+		},
+	})
+	if cusErr.Exists() {
+		return
+	}
+
+	lockAcquired, lockErr := s.locker.Lock(ctx, getRideLockKey(rideID), rideLock)
+	if lockErr != nil {
+		cusErr = error2.NewCustomError(http.StatusInternalServerError, fmt.Sprintf("unable to acquire lock | err :: %v", lockErr.Error()))
+		return
+	}
+
+	if !lockAcquired {
+		cusErr = error2.NewCustomError(http.StatusBadRequest, fmt.Sprintf("unable to acquire lock"))
+		return
+	}
+
+	defer func(locker lock.Locker, ctx context.Context, lockKey string) {
+		_, releaseErr := locker.Release(ctx, lockKey)
+		if releaseErr != nil {
+			log.Printf("unable to release lock for %v", lockKey)
+		}
+	}(s.locker, ctx, getRideLockKey(rideID))
+
+	lockAcquired, lockErr = s.locker.Lock(ctx, getDriverLockKey(ride.Driver.ID), rideLock)
+	if lockErr != nil {
+		cusErr = error2.NewCustomError(http.StatusInternalServerError, fmt.Sprintf("unable to acquire lock | err :: %v", lockErr.Error()))
+		return
+	}
+
+	if !lockAcquired {
+		cusErr = error2.NewCustomError(http.StatusBadRequest, fmt.Sprintf("unable to acquire lock"))
+		return
+	}
+
+	defer func(locker lock.Locker, ctx context.Context, lockKey string) {
+		_, releaseErr := locker.Release(ctx, lockKey)
+		if releaseErr != nil {
+			log.Printf("unable to release lock for %v", lockKey)
+		}
+	}(s.locker, ctx, getDriverLockKey(ride.Driver.ID))
+
+	cusErr = s.rideRepository.UpdateRide(ctx, map[string]mongo2.QueryFilter{
+		constants.MongoID: {
+			mongo2.IDQuery,
+			rideID,
+		},
+		constants.Status: {
+			mongo2.ExactQuery,
+			models.RideStatusAccepted,
+		},
+	}, map[string]interface{}{
+		constants.Status:    models.RideStatusCancelled,
+		constants.UpdatedAt: time.Now().UTC(),
+	})
+	if cusErr.Exists() {
+		return
+	}
+
+	cusErr = s.driverRepository.UpdateDriver(ctx, map[string]mongo2.QueryFilter{
+		constants.MongoID: {
+			mongo2.IDQuery,
+			userDetails.ID,
+		},
+		"is_on_ride": {
+			mongo2.ExactQuery,
+			true,
+		},
+	}, map[string]interface{}{
+		"is_on_ride":        false,
+		constants.UpdatedAt: time.Now().UTC(),
+	})
+
+	return
+}
+
+func (s *Service) CompleteRide(
+	ctx context.Context,
+	rideID string,
+	userDetails models.UserDetails,
+) (cusErr error2.CustomError) {
+	ride, cusErr := s.rideRepository.GetRide(ctx, map[string]mongo2.QueryFilter{
+		constants.MongoID: {
+			mongo2.IDQuery,
+			rideID,
+		},
+		constants.Status: {
+			mongo2.ExactQuery,
+			models.RideStatusInProgress,
+		},
+	})
+	if cusErr.Exists() {
+		return
+	}
+
+	lockAcquired, lockErr := s.locker.Lock(ctx, getRideLockKey(rideID), rideLock)
+	if lockErr != nil {
+		cusErr = error2.NewCustomError(http.StatusInternalServerError, fmt.Sprintf("unable to acquire lock | err :: %v", lockErr.Error()))
+		return
+	}
+
+	if !lockAcquired {
+		cusErr = error2.NewCustomError(http.StatusBadRequest, fmt.Sprintf("unable to acquire lock"))
+		return
+	}
+
+	defer func(locker lock.Locker, ctx context.Context, lockKey string) {
+		_, releaseErr := locker.Release(ctx, lockKey)
+		if releaseErr != nil {
+			log.Printf("unable to release lock for %v", lockKey)
+		}
+	}(s.locker, ctx, getRideLockKey(rideID))
+
+	lockAcquired, lockErr = s.locker.Lock(ctx, getDriverLockKey(ride.Driver.ID), rideLock)
+	if lockErr != nil {
+		cusErr = error2.NewCustomError(http.StatusInternalServerError, fmt.Sprintf("unable to acquire lock | err :: %v", lockErr.Error()))
+		return
+	}
+
+	if !lockAcquired {
+		cusErr = error2.NewCustomError(http.StatusBadRequest, fmt.Sprintf("unable to acquire lock"))
+		return
+	}
+
+	defer func(locker lock.Locker, ctx context.Context, lockKey string) {
+		_, releaseErr := locker.Release(ctx, lockKey)
+		if releaseErr != nil {
+			log.Printf("unable to release lock for %v", lockKey)
+		}
+	}(s.locker, ctx, getDriverLockKey(ride.Driver.ID))
+
+	cusErr = s.rideRepository.UpdateRide(ctx, map[string]mongo2.QueryFilter{
+		constants.MongoID: {
+			mongo2.IDQuery,
+			rideID,
+		},
+		constants.Status: {
+			mongo2.ExactQuery,
+			models.RideStatusAccepted,
+		},
+	}, map[string]interface{}{
+		constants.Status:    models.RideStatusCompleted,
+		constants.UpdatedAt: time.Now().UTC(),
+	})
+	if cusErr.Exists() {
+		return
+	}
+
+	cusErr = s.driverRepository.UpdateDriver(ctx, map[string]mongo2.QueryFilter{
+		constants.MongoID: {
+			mongo2.IDQuery,
+			userDetails.ID,
+		},
+		"is_on_ride": {
+			mongo2.ExactQuery,
+			true,
+		},
+	}, map[string]interface{}{
+		"is_on_ride":        false,
+		constants.UpdatedAt: time.Now().UTC(),
+	})
+
+	return
+}
+
+func getDriverLockKey(driverID string) string {
+	return "driver_" + driverID
+}
+
+func getRideLockKey(rideID string) string {
+	return "ride_" + rideID
 }

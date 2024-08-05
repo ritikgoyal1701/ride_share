@@ -12,4 +12,6 @@ const (
 	Location        = "location"
 	MongoExpression = "$expr"
 	Status          = "status"
+	Driver          = "driver"
+	RideID          = "ride_id"
 )

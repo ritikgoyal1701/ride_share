@@ -3,6 +3,7 @@ package ride
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"rideShare/constants"
 	"rideShare/internal/controllers/ride/requests"
 	"rideShare/internal/domain/interfaces"
 	error2 "rideShare/pkg/error"
@@ -123,4 +124,83 @@ func (ctrl *Controller) GetRides(ctx *gin.Context) {
 	}
 
 	responses.NewSuccessResponse(ctx, resp)
+}
+
+func (ctrl *Controller) CompleteRide(ctx *gin.Context) {
+	userDetails, cusErr := utils.GetUserDetails(ctx)
+	if cusErr.Exists() {
+		error2.NewErrorResponse(ctx, cusErr)
+		return
+	}
+
+	cusErr = ctrl.rideService.CompleteRide(ctx, ctx.Param(constants.RideID), userDetails)
+	if cusErr.Exists() {
+		error2.NewErrorResponse(ctx, cusErr)
+		return
+	}
+
+	responses.NewSuccessResponse(ctx, responses.NewSuccessMessage("Ride completed successfully"))
+}
+
+func (ctrl *Controller) CancelRide(ctx *gin.Context) {
+	userDetails, cusErr := utils.GetUserDetails(ctx)
+	if cusErr.Exists() {
+		error2.NewErrorResponse(ctx, cusErr)
+		return
+	}
+
+	cusErr = ctrl.rideService.CancelRide(ctx, ctx.Param(constants.RideID), userDetails)
+	if cusErr.Exists() {
+		error2.NewErrorResponse(ctx, cusErr)
+		return
+	}
+
+	responses.NewSuccessResponse(ctx, responses.NewSuccessMessage("Ride cancelled successfully"))
+}
+
+func (ctrl *Controller) AcceptRide(ctx *gin.Context) {
+	userDetails, cusErr := utils.GetUserDetails(ctx)
+	if cusErr.Exists() {
+		error2.NewErrorResponse(ctx, cusErr)
+		return
+	}
+
+	cusErr = ctrl.rideService.AcceptRide(ctx, ctx.Param(constants.RideID), userDetails)
+	if cusErr.Exists() {
+		error2.NewErrorResponse(ctx, cusErr)
+		return
+	}
+
+	responses.NewSuccessResponse(ctx, responses.NewSuccessMessage("Ride accepted successfully"))
+}
+
+func (ctrl *Controller) VerifyRide(ctx *gin.Context) {
+	var req requests.VerificationRequest
+	err := ctx.ShouldBindJSON(&req)
+	if err != nil {
+		cusErr := error2.NewCustomError(http.StatusUnprocessableEntity, err.Error())
+		error2.NewErrorResponse(ctx, cusErr)
+		return
+	}
+
+	validateErr := validate.Get().Struct(req)
+	if validateErr != nil {
+		cusErr := error2.NewCustomError(http.StatusUnprocessableEntity, validateErr.Error())
+		error2.NewErrorResponse(ctx, cusErr)
+		return
+	}
+
+	userDetails, cusErr := utils.GetUserDetails(ctx)
+	if cusErr.Exists() {
+		error2.NewErrorResponse(ctx, cusErr)
+		return
+	}
+
+	cusErr = ctrl.rideService.VerifyRide(ctx, ctx.Param(constants.RideID), userDetails, req)
+	if cusErr.Exists() {
+		error2.NewErrorResponse(ctx, cusErr)
+		return
+	}
+
+	responses.NewSuccessResponse(ctx, responses.NewSuccessMessage("verified successfully"))
 }

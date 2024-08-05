@@ -16,12 +16,20 @@ type (
 		GetRidePrice(ctx *gin.Context)
 		CreateRide(ctx *gin.Context)
 		GetRides(ctx *gin.Context)
+		VerifyRide(ctx *gin.Context)
+		AcceptRide(ctx *gin.Context)
+		CancelRide(ctx *gin.Context)
+		CompleteRide(ctx *gin.Context)
 	}
 
 	RideService interface {
 		CreateRide(ctx context.Context, userDetails models.UserDetails, req requests2.CreateRideRequest) (cusErr error2.CustomError)
 		GetRidePrice(ctx context.Context, userDetails models.UserDetails, req requests2.PriceRequest) (resp responses.PriceResponse, cusErr error2.CustomError)
 		GetRides(ctx context.Context, userDetails models.UserDetails, req requests2.Location) (resp []responses2.GetRides, cusErr error2.CustomError)
+		CompleteRide(ctx context.Context, rideID string, userDetails models.UserDetails) (cusErr error2.CustomError)
+		CancelRide(ctx context.Context, rideID string, userDetails models.UserDetails) (cusErr error2.CustomError)
+		VerifyRide(ctx context.Context, rideID string, userDetails models.UserDetails, req requests2.VerificationRequest) (cusErr error2.CustomError)
+		AcceptRide(ctx context.Context, rideID string, userDetails models.UserDetails) (cusErr error2.CustomError)
 	}
 
 	RideRepository interface {
